@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medir Color en Imagen</title>
+</head>
+<body>
+    <h1>Impresora</h1>
+    
+    <!-- Input para cargar la imagen -->
+    <input type="file" id="imageLoader" accept="image/*" />
+    <br><br>
+    
+    <!-- Canvas para procesar la imagen (no visible para el usuario) -->
+    <canvas id="canvas" style="display: none;"></canvas>
+    
+    <!-- Botón para calcular el precio -->
+    <button id="calculateButton">Calcular Precio</button>
+    
+    <!-- Mostrar el resultado del precio -->
+    <h2>Precio final: $<span id="price">0.00</span></h2>
+    
+    <script>
+        // Variables para manejar el canvas y la imagen
+        const imageLoader = document.getElementById('imageLoader');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const priceDisplay = document.getElementById('price');
+        const calculateButton = document.getElementById('calculateButton');
+        
+        let image = new Image();
+        
+        imageLoader.addEventListener('change', function(e) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                image.src = event.target.result;
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        });
+
+        // Cuando la imagen se carga, la dibujamos en el canvas
+        image.onload = function() {
+            canvas.width = image.width;
+            canvas.height = image.height;
+            ctx.drawImage(image, 0, 0);
+        };
+
+        // Función para calcular el porcentaje de píxeles con color
+        function calculatePrice() {
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const pixels = imageData.data;
+
+            let totalPixels = canvas.width * canvas.height;
+            let coloredPixels = 0;
+
+            // Recorremos los píxeles (RGBA: cada 4 valores representa un píxel)
+            for (let i = 0; i < pixels.length; i += 4) {
+                const r = pixels[i];
+                const g = pixels[i + 1];
+                const b = pixels[i + 2];
+
+                // Contamos los píxeles que no son blancos (no son 255, 255, 255)
+                if (!(r === 255 && g === 255 && b === 255)) {
+                    coloredPixels++;
+                }
+            }
+
+            // Calculamos el porcentaje de píxeles con color
+            const percentageColored = (coloredPixels / totalPixels) * 100;
+
+            // Aplicamos la regla de 3 para calcular el precio
+            const price = (percentageColored / 100) * 16;
+
+            // Mostramos el precio redondeado
+            priceDisplay.textContent = price.toFixed(2);
+        }
+
+        // Cuando el usuario hace clic en "Calcular Precio"
+        calculateButton.addEventListener('click', calculatePrice);
+    </script>
+</body>
+</html>
